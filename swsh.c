@@ -265,6 +265,15 @@ void cmd_exec(char *input)
 		write(0,"\n",1);
 		return;
 	}
+	/* instruction validiation stage */
+	for(i=0;i<pipenum+1;i++)
+	{
+		if(-1==cmd_typechk(b[i][0]))
+		{
+			write(2,"swsh: Command not found\n",24);
+			return;
+		}	
+	}	
 	/* execution stage */
 	pid_t pid;
 	int fd;
