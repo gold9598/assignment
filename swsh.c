@@ -18,6 +18,7 @@
 #include <sys/types.h>
 #include <stdio.h> // Because of the function named rename
 #include <signal.h>
+#include <errno.h>
 #include "string_sw.h"
 void handler(int sig)
 {
@@ -68,6 +69,15 @@ void print_prompt()
 
     if (ret <= 0)
         exit(1);
+}
+void print_error()
+{
+	if(errno == EACCES)	write(2,"Permission denied\n",18);
+	else if(errno == EISDIR)	write(2,"Is a directory\n",15);
+	else if(errno == ENOENT)	write(2,"No such file or directory\n",26);
+	else if(errno == ENOTDIR)	write(2,"Not a directory\n",16);
+	else if(errno == EPERM)	write(2,"Permission denied\n",18);
+	else printf("<%d>\n",errno);
 }
 void cmd_exec(char *input)
 {
@@ -209,9 +219,20 @@ void cmd_exec(char *input)
 		{
 			if(b[0][1]!=NULL)
 			{
-				chdir(b[0][1]);	
+				if(-1==chdir(b[0][1]))
+				{
+					write(2,"Error occurred: ",16);
+					print_error();
+				}
 			}
-			else	chdir(getenv("HOME"));
+			else
+			{
+				if(-1==chdir(getenv("HOME")))
+				{
+					write(2,"Error occurred: ",16);
+					print_error();
+				}
+			}
 		}
 		return;
 	}
@@ -222,6 +243,7 @@ void cmd_exec(char *input)
 			if(-1==unlink(b[0][1]))
 			{
 				write(2,"Error occurred: ",16);
+				print_error();
 			}
 			return;
 		}
@@ -231,6 +253,7 @@ void cmd_exec(char *input)
 		if(-1==rename(b[0][1],b[0][2]))
 		{
 			write(2,"Error occurred: ",16);
+			print_error();
 		}
 		return;	
 	}
