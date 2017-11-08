@@ -268,7 +268,9 @@ void cmd_exec(char *input)
 	/* instruction validiation stage */
 	for(i=0;i<pipenum+1;i++)
 	{
-		if(-1==cmd_typechk(b[i][0]))
+		int isdir=0;
+		if(b[i][0][0]=='/'||b[i][0][1]=='/')	isdir=1;
+		if(-1==cmd_typechk(b[i][0])&&!isdir)
 		{
 			write(2,"swsh: Command not found\n",24);
 			return;
@@ -282,11 +284,16 @@ void cmd_exec(char *input)
 	for(i=0;i<pipenum;i++)	pipe(p[i]);
 	for(i=0;i<pipenum+1;i++)
 	{
+		int is_dir =0;
+		if(b[i][0][0]=='/'||b[i][0][1]=='/')	is_dir=1;
 		if((pid=fork())==0)
 		{
 			if(strcmp(b[i][0],"man")&&strcmp(b[i][0],"vim"))
 			{
-				if(setpgid(pid,pid)<0)	exit(0);
+				if(!is_dir)
+				{
+					if(setpgid(pid,pid)<0)	exit(0);
+				}
 			}
 			if(i>0)
 			{
